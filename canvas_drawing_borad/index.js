@@ -10,7 +10,9 @@
         oEraserSize = dom.getElementById('J_eraser_size'),
         oReset = dom.getElementById('J_reset'),
         oLastStep = dom.getElementById('J_last_step'),
-        oNextStep = dom.getElementById('J_next_step');
+        oNextStep = dom.getElementById('J_next_step'),
+        oSaveBtn = dom.getElementById('J_save_btn'),
+        oEraserBlock = dom.getElementById('J_eraser_block');
 
     // 获取浏览器窗口大小
     const { width, height } = getViewportSize();
@@ -55,6 +57,12 @@
         oReset.addEventListener('click', handleReset, false);
         oLastStep.addEventListener('click', handleLastStep, false);
         oNextStep.addEventListener('click', handleNextStep, false);
+        oSaveBtn.addEventListener('click', handleSaveImg, false);
+    }
+
+    // 保存图片
+    function handleSaveImg(){
+        canvasToImg(oCan)
     }
 
     // 点击颜色改变事件
@@ -82,6 +90,14 @@
             ctx.setLineWidth(state.lineWidth);
             ctx.setColor(state.color || CANVAS_DEFAULT.COLOR);
         }
+    }
+    function setEraserBlockProps(x, y){
+        const width = ctx.getLineWidth();
+        oEraserBlock.style.width = width + "px";
+        oEraserBlock.style.height = width + 'px';
+        oEraserBlock.style.top = y - width / 2 + 'px'
+        oEraserBlock.style.left = x - width / 2 + 'px'
+        oEraserBlock.style.display = 'block'
     }
 
     function handleEraserSize(){
@@ -127,10 +143,12 @@
         const ev = e || width.event;
         oCan.addEventListener('mousemove', handleMousemove, false)
         oCan.addEventListener('mouseup', handleMouseup, false)
+        oEraserBlock.addEventListener('mouseup', handleEraserBlockMouseup, false)
         state.initPos = [e.clientX, e.clientY];
         drawPoint(state.initPos[0], state.initPos[1]);
         // 记录开始画的动作
         state.drawData.push({ moveTo: state.initPos, lineTo: [], color: ctx.getColor(), width: ctx.getLineWidth() })
+        state.eraserStatus && setEraserBlockProps(state.initPos[0], state.initPos[1])
     }
 
     // 鼠标按下圆画一个点
@@ -149,6 +167,7 @@
         state.initPos = [e.clientX, e.clientY];
         // 记录移动动作
         state.drawData[state.drawData.length - 1].lineTo.push(state.initPos)
+        state.eraserStatus && setEraserBlockProps(ev.clientX, ev.clientY)
     }
 
     function drawLine(x1, y1, x2, y2){
@@ -183,6 +202,10 @@
     function handleMouseup(e) {
         oCan.removeEventListener('mousemove', handleMousemove, false)
         oCan.removeEventListener('mouseup', handleMouseup, false)
+    }
+    function handleEraserBlockMouseup(){
+        oEraserBlock.style.display = 'none';
+        handleMouseup();
     }
     init()
 })(document)
